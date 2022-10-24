@@ -1,0 +1,97 @@
+﻿@page "/EmpleadoForm"
+@page "/EmpleadoForm/{idEmpleado:int}"
+@using Data
+@using System.Net.Http
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<h3>Datos de Empleado</h3>
+<div class="container mt-3">
+    <EditForm Model="@oEmpleado">
+        <div class="row">
+           
+            <div class="form-group mb-1">
+                <label for="Nombres">Nombres</label>
+                <InputText class="form-control" id="Nombres" @bind-Value="@oEmpleado.Nombre" />
+            </div>
+            <div class="form-group mb-1">
+                <label for="Apellidos">Apellidos</label>
+                <InputText class="form-control" id="Apellidos" @bind-Value="@oEmpleado.Apellido" />
+            </div>
+            <div class="form-group mb-1">
+                <label for="Direccion">Direccion</label>
+                <InputText class="form-control" id="Direccion" @bind-Value="@oEmpleado.Direccion" />
+            </div>
+            <div class="form-group mb-1">
+                <label for="DPI">DPI</label>
+                <InputText class="form-control" id="DPI" @bind-Value="@oEmpleado.Dpi" />
+            </div>
+            <div class="form-group mb-1">
+                <label for="Telefono">Telefono</label>
+                <InputText class="form-control" id="Telefono" @bind-Value="@oEmpleado.Telefono" />
+            </div> 
+            <div class="form-group mb-1">
+                <label for="FechaNacimiento">FechaNacimiento</label>
+                <InputDate class="form-control" id="FechaNacimiento" @bind-Value="@oEmpleado.FechaNacimiento" />
+            </div>
+            <div class="form-group mb-1">
+                <label for="FechaIngresoRegistro">Fecha Ingreso Registro</label>
+                <InputDate class="form-control" id="FechaIngresoRegistro" @bind-Value="@oEmpleado.FechaIngresoRegistro" />
+            </div>
+            <div class="form-group mb-1">
+            <label>Tipo de Sangre:</label>
+            <InputSelect class="form-control" id="Puesto" @bind-Value="@oEmpleado.IdPuesto">
+                <option value="0">Seleccione un Puesto</option>
+                @foreach (var puesto in Puestos)
+                {
+                    <option value="@puesto.IdPuesto">@puesto.Puestos</option>
+                }
+            </InputSelect>
+        </div>
+            <button class="btn btn-primary" type="button" @onclick="()=>Save()">Guardar</button>
+        </div>
+    </EditForm>
+</div>
+@code {
+    [Parameter]
+    public int IdEmpleado { get; set; }
+    Empleado oEmpleado = new Empleado();
+    List<Puesto> Puestos = new List<Puesto>();
+    int idPuesto= 0;
+    protected override async Task OnInitializedAsync()
+    {
+        if (IdEmpleado != 0){
+            Puestos = await GetPuestos();
+            oEmpleado = await Http.GetFromJsonAsync<Empleado>($"api/Empleados/{IdEmpleado}");
+        }
+        else
+        {
+            Puestos = await GetPuestos();
+        }
+    }
+
+    private async Task<List<Puesto>> GetPuestos()
+    {
+        var response = await Http.GetFromJsonAsync<List<Puesto>>("api/Puestos");
+        return response;
+    }
+    private async Task Save()
+    {
+        if (IdEmpleado != 0)
+        { 
+            var response = await Http.PutAsJsonAsync<Empleado>($"api/Empleados/{IdEmpleado}", oEmpleado);
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/Empleados");
+            }
+        }
+        else
+        {
+            var response = await Http.PostAsJsonAsync("api/Empleados", oEmpleado);
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/Empleados");
+            }
+        }
+    }
+}
